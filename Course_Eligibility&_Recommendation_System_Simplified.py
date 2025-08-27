@@ -1225,20 +1225,22 @@ if navigation == "Quick Check":
             st.table(combined_data)
 
             dataframes_list = []
-            for _, row in combined_data.iterrows():
-                college_majors = get_college_majors(row['Major_Code'])
+            for student_id, student_data in combined_data.groupby("Student_ID"):
+                # If you need college majors, you can take it from the first row of this student's data
+                college_majors = get_college_majors(student_data.iloc[0]['Major_Code'])
+                
                 try:
                     result = process_data_generic(
-                        combined_data[combined_data["Major"] == row['Major']],
+                        student_data,                  # all rows for this student
                         major_data,
                         "Requierments_Weights.xlsx",
-                        row['Major'],
-                        row['Major_Code'],
+                        student_data.iloc[0]['Major'],     # Major of this student
+                        student_data.iloc[0]['Major_Code'],# Major code
                         college_majors
                     )
                     dataframes_list.append(result)
                 except Exception as e:
-                    st.error(f"Error processing {row['Major']}: {e}")
+                    print(f"Failed for student {student_id}: {e}")
 
             if dataframes_list:
                 requirements = pd.concat([df[0] for df in dataframes_list], ignore_index=True)
